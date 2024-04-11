@@ -20,13 +20,21 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	// ReplicatedUsing: Ao propagar mudanças na variável ReplicatedVar para os clientes
+	// eles automaticamente recebem a mudança e chamam a função OnRep_ReplicatedVar
+	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedVar, BlueprintReadWrite)
+	float ReplicatedVar;
+
+	FTimerHandle TestTimer;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
-	float ReplicatedVar;
+	UFUNCTION(BlueprintCallable)
+	void OnRep_ReplicatedVar();
 
 	// Parent: AActor - Precisa ser overrided para replicação funcionar
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void DecreaseReplicatedVar();
 };
