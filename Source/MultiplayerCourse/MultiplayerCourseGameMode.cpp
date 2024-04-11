@@ -13,3 +13,17 @@ AMultiplayerCourseGameMode::AMultiplayerCourseGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 }
+
+void AMultiplayerCourseGameMode::HostLANGame()
+{
+	GetWorld()->ServerTravel("/Game/ThirdPerson/Maps/ThirdPersonMap?listen");
+}
+
+void AMultiplayerCourseGameMode::JoinLANGame()
+{
+	APlayerController *PC = GetGameInstance()->GetFirstLocalPlayerController();
+	if (PC)
+	{
+		PC->ClientTravel("192.168.1.121", ETravelType::TRAVEL_Absolute);
+	}
+}
