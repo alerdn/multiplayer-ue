@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Particles/ParticleSystem.h"
 #include "MyBox.generated.h"
 
 UCLASS()
@@ -27,6 +28,9 @@ public:
 
 	FTimerHandle TestTimer;
 
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ExplosionEffect;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,4 +41,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void DecreaseReplicatedVar();
+
+	// Multicast: Deve ser chamado no server e é executado em todos os
+	// players, isto é, server e client
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPCFunction();
 };

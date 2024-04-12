@@ -2,6 +2,7 @@
 
 #include "MyBox.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AMyBox::AMyBox()
@@ -22,17 +23,8 @@ void AMyBox::BeginPlay()
 
 	if (HasAuthority())
 	{
-		GetWorld()->GetTimerManager().SetTimer(TestTimer, this, &AMyBox::DecreaseReplicatedVar, 2.f, false);
+		GetWorld()->GetTimerManager().SetTimer(TestTimer, this, &AMyBox::MulticastRPCFunction, 2.f);
 	}
-
-	// 	if (HasAuthority())
-	// 	{
-	//* 	Escreve mensagem na tela
-	// 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("Server"));
-	// 	}else
-	// 	{
-	// 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Blue, TEXT("Server"));
-	// 	}
 }
 
 // Called every frame
@@ -45,6 +37,7 @@ void AMyBox::Tick(float DeltaTime)
 // assim que a variável ReplicatedVar é alterada pelo server
 void AMyBox::OnRep_ReplicatedVar()
 {
+#if 0
 	if (HasAuthority())
 	{
 		FVector NewLocation = GetActorLocation() + FVector(.0f, .0f, 200.f);
@@ -56,6 +49,7 @@ void AMyBox::OnRep_ReplicatedVar()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::Printf(TEXT("Client: %d: OnRep_ReplicatedVar"), GPlayInEditorID));
 	}
+#endif
 }
 
 void AMyBox::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -73,9 +67,28 @@ void AMyBox::DecreaseReplicatedVar()
 
 		// Precisamos chamar manualmente no server
 		OnRep_ReplicatedVar();
-		if (ReplicatedVar >0)
+		if (ReplicatedVar > 0)
 		{
 			GetWorld()->GetTimerManager().SetTimer(TestTimer, this, &AMyBox::DecreaseReplicatedVar, 2.f, false);
 		}
+	}
+}
+
+void AMyBox::MulticastRPCFunction_Implementation()
+{
+	if (HasAuthority())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, TEXT("Server: Multicast"));
+		GetWorld()->GetTimerManager().SetTimer(TestTimer, this, &AMyBox::MulticastRPCFunction, 2.f);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::Printf(TEXT("Client: %d: Multicast"), GPlayInEditorID));
+	}
+
+	if (!IsRunningDedicatedServer())
+	{
+		FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, 100.f);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, SpawnLocation, FRotator::ZeroRotator, true, EPSCPoolMethod::AutoRelease);
 	}
 }
