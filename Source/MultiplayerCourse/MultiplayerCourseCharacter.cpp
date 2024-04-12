@@ -9,7 +9,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-
+#include "Engine/StaticMeshActor.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMultiplayerCourseCharacter
@@ -18,14 +18,14 @@ AMultiplayerCourseCharacter::AMultiplayerCourseCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	GetCharacterMovement()->bOrientRotationToMovement = true;			 // Character moves in the direction of input...
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
@@ -39,27 +39,27 @@ AMultiplayerCourseCharacter::AMultiplayerCourseCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 400.0f;		// The camera follows at this distance behind the character
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->bUsePawnControlRotation = false;								// Camera does not rotate relative to arm
 
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
+	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
 void AMultiplayerCourseCharacter::BeginPlay()
 {
-	// Call the base class  
+	// Call the base class
 	Super::BeginPlay();
 
-	//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	// Add Input Mapping Context
+	if (APlayerController *PlayerController = Cast<APlayerController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem *Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
@@ -69,26 +69,25 @@ void AMultiplayerCourseCharacter::BeginPlay()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void AMultiplayerCourseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+void AMultiplayerCourseCharacter::SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent)
 {
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		//Jumping
+	if (UEnhancedInputComponent *EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+
+		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		//Moving
+		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMultiplayerCourseCharacter::Move);
 
-		//Looking
+		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCourseCharacter::Look);
-
 	}
-
 }
 
-void AMultiplayerCourseCharacter::Move(const FInputActionValue& Value)
+void AMultiplayerCourseCharacter::Move(const FInputActionValue &Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -101,17 +100,17 @@ void AMultiplayerCourseCharacter::Move(const FInputActionValue& Value)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
+
+		// get right vector
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// add movement 
+		// add movement
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
 
-void AMultiplayerCourseCharacter::Look(const FInputActionValue& Value)
+void AMultiplayerCourseCharacter::Look(const FInputActionValue &Value)
 {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
@@ -124,6 +123,44 @@ void AMultiplayerCourseCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+// Esta função não é declarada no header
+// No header declaramos ServerRPCFunction e o cliente sabe que tem que 
+// executar a versão Implementation 
+void AMultiplayerCourseCharacter::ServerRPCFunction_Implementation(int id)
+{
+	if (HasAuthority())
+	{
+		if (!SphereMesh)
+		{
+			return;
+		}
 
+		AStaticMeshActor *StaticMeshActor = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
+		if (StaticMeshActor)
+		{
+			StaticMeshActor->SetReplicates(true);
+			StaticMeshActor->SetReplicateMovement(true);
+			StaticMeshActor->SetMobility(EComponentMobility::Movable);
 
+			FVector SpawnLocation = GetActorLocation() + GetActorRotation().Vector() * 100.f + GetActorUpVector() * 50.f;
+			StaticMeshActor->SetActorLocation(SpawnLocation);
 
+			UStaticMeshComponent *StaticMeshComponent = StaticMeshActor->GetStaticMeshComponent();
+			if (StaticMeshComponent)
+			{
+				StaticMeshComponent->SetIsReplicated(true);
+				StaticMeshComponent->SetSimulatePhysics(true);
+				StaticMeshComponent->SetStaticMesh(SphereMesh);
+			}
+		}
+	}
+}
+
+// Esta função é executada antes de ServerRPCFunction_Implementation
+// Se ela retornar true, a função Implementation é executada, senão 
+// o player é expulso do jogo
+bool AMultiplayerCourseCharacter::ServerRPCFunction_Validate(int id)
+{
+	// Simulando validação onde id só pode ser entre 0 e 100
+	return id >= 0 && id <= 100;
+}

@@ -62,5 +62,13 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	// Server: Função que é chamada no client e executada no server
+	// WithValidation: Espera encontrar uma função _Validate no cpp
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+	void ServerRPCFunction(int id);
+
+	UPROPERTY(EditAnywhere)
+	UStaticMesh* SphereMesh;
 };
 
