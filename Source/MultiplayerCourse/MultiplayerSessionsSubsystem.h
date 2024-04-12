@@ -27,14 +27,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FindServer(FString ServerName);
 
-	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 private:
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 	IOnlineSessionPtr SessionInterface;
 
 	bool bCreateServerAfterDestroy;
 	FString DestroyedServerName;
+	FString ServerNameToFind;
+	FName MySessionName;
 
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);
+	void OnJoinSessionComplete(FName ServerName, EOnJoinSessionCompleteResult::Type Result);
 };
