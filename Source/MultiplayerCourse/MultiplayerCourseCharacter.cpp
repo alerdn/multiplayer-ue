@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/StaticMeshActor.h"
+#include "Particles/ParticleSystem.h"
+#include <Kismet/GameplayStatics.h>
 
 //////////////////////////////////////////////////////////////////////////
 // AMultiplayerCourseCharacter
@@ -124,8 +126,8 @@ void AMultiplayerCourseCharacter::Look(const FInputActionValue &Value)
 }
 
 // Esta função não é declarada no header
-// No header declaramos ServerRPCFunction e o cliente sabe que tem que 
-// executar a versão Implementation 
+// No header declaramos ServerRPCFunction e o cliente sabe que tem que
+// executar a versão Implementation
 void AMultiplayerCourseCharacter::ServerRPCFunction_Implementation(int id)
 {
 	if (HasAuthority())
@@ -159,10 +161,18 @@ void AMultiplayerCourseCharacter::ServerRPCFunction_Implementation(int id)
 }
 
 // Esta função é executada antes de ServerRPCFunction_Implementation
-// Se ela retornar true, a função Implementation é executada, senão 
+// Se ela retornar true, a função Implementation é executada, senão
 // o player é expulso do jogo
 bool AMultiplayerCourseCharacter::ServerRPCFunction_Validate(int id)
 {
 	// Simulando validação onde id só pode ser entre 0 e 100
 	return id >= 0 && id <= 100;
+}
+
+void AMultiplayerCourseCharacter::ClientRPCFunction_Implementation()
+{
+	if (ExplosionEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation(), FRotator::ZeroRotator, true, EPSCPoolMethod::AutoRelease);
+	}
 }

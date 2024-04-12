@@ -58,6 +58,12 @@ protected:
 	virtual void BeginPlay();
 
 public:
+	UPROPERTY(EditAnywhere)
+	UStaticMesh* SphereMesh;
+
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* ExplosionEffect;
+
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
@@ -68,7 +74,9 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
 	void ServerRPCFunction(int id);
 
-	UPROPERTY(EditAnywhere)
-	UStaticMesh* SphereMesh;
+	// Client: Função que é chamada no server e executada no client
+	// Reliable: Há garantia que a função será executada
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientRPCFunction();
 };
 
