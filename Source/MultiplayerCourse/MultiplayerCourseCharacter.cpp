@@ -135,7 +135,9 @@ void AMultiplayerCourseCharacter::ServerRPCFunction_Implementation(int id)
 			return;
 		}
 
-		AStaticMeshActor *StaticMeshActor = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = this;
+		AStaticMeshActor *StaticMeshActor = GetWorld()->SpawnActor<AStaticMeshActor>(SpawnParameters);
 		if (StaticMeshActor)
 		{
 			StaticMeshActor->SetReplicates(true);
