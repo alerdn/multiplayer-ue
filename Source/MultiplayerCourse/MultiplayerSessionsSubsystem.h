@@ -28,6 +28,9 @@ public:
 
 private:
 	IOnlineSessionPtr SessionInterface;
+	bool bCreateServerAfterDestroy;
+	FString DestroyedServerName;
 
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 };

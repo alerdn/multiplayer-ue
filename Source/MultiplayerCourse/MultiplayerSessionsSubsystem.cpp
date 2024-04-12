@@ -14,6 +14,8 @@ void PrintString(const FString &Message)
 
 UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem()
 {
+    bCreateServerAfterDestroy = false;
+    DestroyedServerName = "";
 }
 
 void UMultiplayerSessionsSubsystem::Initialize(FSubsystemCollectionBase &Collection)
@@ -31,6 +33,7 @@ void UMultiplayerSessionsSubsystem::Initialize(FSubsystemCollectionBase &Collect
         if (SessionInterface.IsValid())
         {
             SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UMultiplayerSessionsSubsystem::OnCreateSessionComplete);
+            SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMultiplayerSessionsSubsystem::OnDestroySessionComplete);
         }
     }
 }
@@ -49,6 +52,19 @@ void UMultiplayerSessionsSubsystem::CreateServer(FString ServerName)
 
     // Session name deve ser único
     FName SessionName = FName("Co-op Session Name");
+
+    // Destruímos uma sessão se ela já existe
+    FNamedOnlineSession *ExistingSession = SessionInterface->GetNamedSession(SessionName);
+    if (ExistingSession)
+    {
+        PrintString(FString::Printf(TEXT("Session %s already exists, destroying it..."), *SessionName.ToString()));
+        bCreateServerAfterDestroy = true;
+        DestroyedServerName = ServerName;
+
+        SessionInterface->DestroySession(SessionName);
+        // Retornamos porque DestroySession é async
+        return;
+    }
 
     // Settings
     FOnlineSessionSettings SessionSettings;
@@ -75,8 +91,18 @@ void UMultiplayerSessionsSubsystem::FindServer(FString ServerName)
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    if(bWasSuccessful)
+    if (bWasSuccessful)
     {
         GetWorld()->ServerTravel("/Game/ThirdPerson/Maps/ThirdPersonMap?listen");
+    }
+}
+
+void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+{
+    if (bCreateServerAfterDestroy)
+    {
+        PrintString("Session destroyed successufully. Creating a new one.");
+        bCreateServerAfterDestroy = false;
+        CreateServer(DestroyedServerName);
     }
 }
