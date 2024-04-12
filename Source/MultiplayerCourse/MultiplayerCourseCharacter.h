@@ -76,7 +76,14 @@ public:
 
 	// Client: Função que é chamada no server e executada no client
 	// Reliable: Há garantia que a função será executada
+	// Unreliable: Não há garantia que a função será executada.
+	// 	Este modelo é útil quando uma função é executada muito frequentemente
 	UFUNCTION(Client, Reliable, BlueprintCallable)
 	void ClientRPCFunction();
+
+	// Notes:
+	// Usar replicated properties para replicar stateful events => pontos de vida
+	// Usar multicast/client rpc para replicar transient events ou cosmetic events => criar partícula, ativar tela de sangramento em um player
+	// Usar server rpc para se comunicar com o servidor e sempre validar dados => senão pode haver cheaters
 };
 
