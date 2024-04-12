@@ -2,7 +2,6 @@
 
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSubsystem.h"
-#include "OnlineSessionSettings.h"
 
 void PrintString(const FString &Message)
 {
@@ -34,6 +33,7 @@ void UMultiplayerSessionsSubsystem::Initialize(FSubsystemCollectionBase &Collect
         {
             SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UMultiplayerSessionsSubsystem::OnCreateSessionComplete);
             SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMultiplayerSessionsSubsystem::OnDestroySessionComplete);
+            SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UMultiplayerSessionsSubsystem::OnFindSessionsComplete);
         }
     }
 }
@@ -80,13 +80,26 @@ void UMultiplayerSessionsSubsystem::CreateServer(FString ServerName)
     // ^^ Funções da Steam ^^
 
     // Cria sessão como LAN se não conseguir conectar com a Steam
-    SessionSettings.bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() != "Steam";
+    SessionSettings.bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
 
     SessionInterface->CreateSession(0, SessionName, SessionSettings);
 }
 
 void UMultiplayerSessionsSubsystem::FindServer(FString ServerName)
 {
+    if (ServerName.IsEmpty())
+    {
+        PrintString("Serve name cannot be empty.");
+        return;
+    }
+
+    // Settings
+    SessionSearch = MakeShareable(new FOnlineSessionSearch());
+    SessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
+    SessionSearch->MaxSearchResults = 9999;
+    SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+    SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 }
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -104,5 +117,23 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
         PrintString("Session destroyed successufully. Creating a new one.");
         bCreateServerAfterDestroy = false;
         CreateServer(DestroyedServerName);
+    }
+}
+
+void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
+{
+    if (!bWasSuccessful || !SessionSearch)
+    {
+        return;
+    }
+
+    TArray<FOnlineSessionSearchResult> Results = SessionSearch->SearchResults;
+
+    if (Results.Num() > 0)
+    {
+        FString Message = FString::Printf(TEXT("%d sessions found."), Results.Num());
+        PrintString(Message);
+    } else {
+        PrintString("Zero sessions found.");
     }
 }
