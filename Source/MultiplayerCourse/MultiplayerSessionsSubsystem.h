@@ -15,11 +15,11 @@ UCLASS()
 class MULTIPLAYERCOURSE_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
-	
+
 public:
 	UMultiplayerSessionsSubsystem();
 
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Initialize(FSubsystemCollectionBase &Collection) override;
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -27,7 +27,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FindServer(FString ServerName);
 
+	UFUNCTION(BlueprintPure)
+	FString GetMapPath() const { return MapPath; }
+	UFUNCTION(BlueprintCallable)
+	void SetMapPath(FString NewMapPath) { MapPath = NewMapPath; }
+
 private:
+	FString MapPath;
+
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 	IOnlineSessionPtr SessionInterface;
 

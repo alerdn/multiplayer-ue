@@ -28,7 +28,7 @@ void UMultiplayerSessionsSubsystem::Initialize(FSubsystemCollectionBase &Collect
         // Se não conseguir usar Steam, Unreal automaticamente tenrará usar NULL
         // Para usar Steam precisamos estar com ela aberta no PC e logado
         FString SubsystemName = OnlineSubsystem->GetSubsystemName().ToString();
-        PrintString(SubsystemName);
+        PrintString(FString::Printf(TEXT("Online System: %s"), *SubsystemName));
 
         SessionInterface = OnlineSubsystem->GetSessionInterface();
         if (SessionInterface.IsValid())
@@ -112,8 +112,14 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
     ServerCreateDelegate.Broadcast(bWasSuccessful);
 
     if (bWasSuccessful)
-    {
-        GetWorld()->ServerTravel("/Game/ThirdPerson/Maps/ThirdPersonMap?listen");
+    {        
+        if (MapPath.IsEmpty())
+        {
+            MapPath = "/Game/ThirdPerson/Maps/ThirdPersonMap";
+        }
+
+        FString Path = FString::Printf(TEXT("%s?listen"), *MapPath);
+        GetWorld()->ServerTravel(Path);
     }
 }
 
