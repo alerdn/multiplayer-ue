@@ -8,9 +8,9 @@
 #include "OnlineSessionSettings.h"
 #include "MultiplayerSessionsSubsystem.generated.h"
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FServerCreateDelegate, bool, bWasSuccessful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FServerJoinDelegate, bool, bWasSuccessful);
+
 UCLASS()
 class MULTIPLAYERCOURSE_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
 {
@@ -36,8 +36,13 @@ private:
 	FString ServerNameToFind;
 	FName MySessionName;
 
+	UPROPERTY(BlueprintAssignable)
+	FServerCreateDelegate ServerCreateDelegate;
+	UPROPERTY(BlueprintAssignable)
+	FServerJoinDelegate ServerJoinDelegate;
+
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnFindSessionsComplete(bool bWasSuccessful);
-	void OnJoinSessionComplete(FName ServerName, EOnJoinSessionCompleteResult::Type Result);
+	void OnJoinSessionComplete(FName SessionrName, EOnJoinSessionCompleteResult::Type Result);
 };

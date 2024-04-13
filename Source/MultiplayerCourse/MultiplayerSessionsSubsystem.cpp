@@ -50,6 +50,7 @@ void UMultiplayerSessionsSubsystem::CreateServer(FString ServerName)
     if (ServerName.IsEmpty())
     {
         PrintString("ServerName cannot be empty.");
+        ServerCreateDelegate.Broadcast(false);
         return;
     }
 
@@ -71,7 +72,7 @@ void UMultiplayerSessionsSubsystem::CreateServer(FString ServerName)
     SessionSettings.bAllowJoinInProgress = true;
     SessionSettings.bIsDedicated = false;
     SessionSettings.bShouldAdvertise = true;
-    SessionSettings.NumPublicConnections = 2;
+    SessionSettings.NumPublicConnections = 16;
 
     // vv Funções da Steam vv
     SessionSettings.bUseLobbiesIfAvailable = true;
@@ -92,6 +93,7 @@ void UMultiplayerSessionsSubsystem::FindServer(FString ServerName)
     if (ServerName.IsEmpty())
     {
         PrintString("Serve name cannot be empty.");
+        ServerJoinDelegate.Broadcast(false);
         return;
     }
     ServerNameToFind = ServerName;
@@ -107,6 +109,8 @@ void UMultiplayerSessionsSubsystem::FindServer(FString ServerName)
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
+    ServerCreateDelegate.Broadcast(bWasSuccessful);
+
     if (bWasSuccessful)
     {
         GetWorld()->ServerTravel("/Game/ThirdPerson/Maps/ThirdPersonMap?listen");
@@ -125,6 +129,8 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 
 void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 {
+    ServerJoinDelegate.Broadcast(bWasSuccessful);
+
     if (!bWasSuccessful || ServerNameToFind.IsEmpty() || !SessionSearch)
     {
         return;
@@ -161,23 +167,28 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
         else
         {
             PrintString(FString::Printf(TEXT("Couldn't find server with name %s"), *ServerNameToFind));
+            ServerJoinDelegate.Broadcast(false);
             ServerNameToFind = "";
         }
     }
     else
     {
         PrintString("Zero sessions found.");
+        ServerJoinDelegate.Broadcast(false);
     }
 }
 
-void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName ServerName, EOnJoinSessionCompleteResult::Type Result)
+void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-    if (Result == EOnJoinSessionCompleteResult::Success)
+    bool bWasSuccessful = Result == EOnJoinSessionCompleteResult::Success;
+    ServerJoinDelegate.Broadcast(bWasSuccessful);
+
+    if (bWasSuccessful)
     {
-        PrintString(FString::Printf(TEXT("Successfully joined session %s"), *MySessionName.ToString()));
+        PrintString(FString::Printf(TEXT("Successfully joined session %s"), *SessionName.ToString()));
         
         FString Address = "";
-        bool Success = SessionInterface->GetResolvedConnectString(MySessionName, Address);
+        bool Success = SessionInterface->GetResolvedConnectString(SessionName, Address);
         if(Success)
         {
             PrintString(FString::Printf(TEXT("Address: %s"), *Address));
@@ -190,10 +201,12 @@ void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName ServerName, EOnJ
         else
         {
             PrintString("GetResolvedConnectString returned false.");
+            ServerJoinDelegate.Broadcast(false);
         }
     }
     else
     {
         PrintString("OnJoinSessionComplete failed.");
+        ServerJoinDelegate.Broadcast(false);
     }
 }
