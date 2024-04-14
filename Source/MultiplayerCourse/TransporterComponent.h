@@ -22,6 +22,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable)
+	void SetPoints(FVector Point1, FVector Point2);
+
+	UFUNCTION(BlueprintCallable)
 	bool IsAllTriggerActorsTriggered() { return bAllTriggerActorsTriggered; }
 	UFUNCTION(BlueprintCallable)
 	void SetAllTriggerActorsTriggered(bool AllTriggerActorsTriggered) { bAllTriggerActorsTriggered = AllTriggerActorsTriggered; }
@@ -41,9 +44,6 @@ private:
 	int ActivatedTriggerCount;
 	UPROPERTY(VisibleAnywhere)
 	bool bAllTriggerActorsTriggered;
-
-	UFUNCTION()
-	void SetPoints(FVector Point1, FVector Point2);
 
 	UFUNCTION()
 	void OnPressurePlateActivated();
