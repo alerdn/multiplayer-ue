@@ -67,6 +67,14 @@ void ACollectableKey::Tick(float DeltaTime)
 
 void ACollectableKey::OnRep_IsCollected()
 {
+	if (HasAuthority())
+	{
+		if (IsCollected)
+		{
+			OnCollected.Broadcast();
+		}
+	}
+
 	Mesh->SetVisibility(false);
 	CollectAudio->Play();
 
@@ -74,6 +82,7 @@ void ACollectableKey::OnRep_IsCollected()
 	{
 		KeyHolderRef->ActivateKeyMesh();
 	}
+
 }
 
 void ACollectableKey::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 

@@ -57,7 +57,7 @@ private:
 	bool bAllTriggerActorsTriggered;
 
 	UFUNCTION()
-	void OnPressurePlateActivated();
+	void OnTriggerActorActivated();
 	UFUNCTION()
-	void OnPressurePlateDeactivated();
+	void OnTriggerActorDeactivated();
 };
