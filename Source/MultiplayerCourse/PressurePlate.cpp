@@ -37,6 +37,10 @@ APressurePlate::APressurePlate()
 		Mesh->SetRelativeLocation(FVector(.0f, .0f, 7.2f));
 	}
 
+	Transporter = CreateDefaultSubobject<UTransporterComponent>(TEXT("Transporter"));
+	Transporter->SetMoveTime(.25f);
+	Transporter->SetOwnerIsTriggerActor(true);
+
 	Activated = false;
 }
 
@@ -47,6 +51,10 @@ void APressurePlate::BeginPlay()
 
 	TriggerMesh->SetVisibility(false);
 	TriggerMesh->SetCollisionProfileName(FName("OverlapAll"));
+
+	FVector Point1 = GetActorLocation();
+	FVector Point2 = Point1 + FVector(.0f, .0f, -10.f);
+	Transporter->SetPoints(Point1, Point2);
 }
 
 // Called every frame

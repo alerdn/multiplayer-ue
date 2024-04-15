@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TransporterComponent.h"
 #include "PressurePlate.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActivated);
@@ -28,6 +29,8 @@ protected:
 	UStaticMeshComponent *TriggerMesh;
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	UStaticMeshComponent *Mesh;
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	UTransporterComponent* Transporter;
 
 public:
 	// Called every frame

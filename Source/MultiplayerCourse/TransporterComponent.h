@@ -29,11 +29,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetAllTriggerActorsTriggered(bool AllTriggerActorsTriggered) { bAllTriggerActorsTriggered = AllTriggerActorsTriggered; }
 
+	UFUNCTION(BlueprintCallable)
+	float GetMoveTime() { return MoveTime; }
+	UFUNCTION(BlueprintCallable)
+	void SetMoveTime(float NewMoveTime) { MoveTime = NewMoveTime; }
+
+	bool IsOwnerTriggerActor() { return bOwnerIsTriggerActor; }
+	void SetOwnerIsTriggerActor(bool IsOwnerTriggerActor) { bOwnerIsTriggerActor = IsOwnerTriggerActor; }
+	
 private:
 	FVector StartPoint;		
 	FVector EndPoint;
 
 	bool bArePointsSet;
+
+	UPROPERTY(EditAnywhere)
+	bool bOwnerIsTriggerActor;
 
 	UPROPERTY(EditAnywhere)
 	float MoveTime;

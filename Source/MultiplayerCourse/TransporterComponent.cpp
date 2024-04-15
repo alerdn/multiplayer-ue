@@ -23,6 +23,11 @@ void UTransporterComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (bOwnerIsTriggerActor)
+	{
+		TriggerActors.Add(GetOwner());
+	}
+
 	for(AActor *TriggerActor : TriggerActors)
 	{
 		APressurePlate* PressurePlate = Cast<APressurePlate>(TriggerActor);
@@ -73,16 +78,9 @@ void UTransporterComponent::SetPoints(FVector Point1, FVector Point2)
 void UTransporterComponent::OnPressurePlateActivated()
 {
 	ActivatedTriggerCount++;
-
-	FString Message = FString::Printf(TEXT("Transporter Activated: %d"), ActivatedTriggerCount);
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, Message);
-
 }
 
 void UTransporterComponent::OnPressurePlateDeactivated()
 {
 	ActivatedTriggerCount--;
-
-	FString Message = FString::Printf(TEXT("Transporter Deactivated: %d"), ActivatedTriggerCount);
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, Message);
 }
