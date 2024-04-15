@@ -33,6 +33,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
 
+	UPROPERTY(EditAnywhere)
+	class ACollectableKeyHolder* KeyHolderRef;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

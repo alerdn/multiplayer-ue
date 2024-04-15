@@ -19,6 +19,8 @@ ACollectableKeyHolder::ACollectableKeyHolder()
 	KeyMesh->SetupAttachment(RootComp);
 	KeyMesh->SetIsReplicated(true);
 	KeyMesh->SetCollisionProfileName(FName("OverlapAllDynamic"));
+
+	RotationSpeed = 100.f;
 }
 
 void ACollectableKeyHolder::BeginPlay()

@@ -24,12 +24,13 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* KeyMesh;
 
+	
 public:	
 	virtual void Tick(float DeltaTime) override;
-
-private:
 	
 	void ActivateKeyMesh();
+
+private:
 
 	UPROPERTY(EditAnywhere)
 	float RotationSpeed;

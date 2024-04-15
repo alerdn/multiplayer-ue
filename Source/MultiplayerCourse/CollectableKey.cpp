@@ -6,6 +6,7 @@
 #include "Net/UnrealNetwork.h"
 #include "MultiplayerCourseCharacter.h"
 #include "Components/AudioComponent.h"
+#include "CollectableKeyHolder.h"
 
 ACollectableKey::ACollectableKey()
 {
@@ -68,6 +69,11 @@ void ACollectableKey::OnRep_IsCollected()
 {
 	Mesh->SetVisibility(false);
 	CollectAudio->Play();
+
+	if (KeyHolderRef)
+	{
+		KeyHolderRef->ActivateKeyMesh();
+	}
 }
 
 void ACollectableKey::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
