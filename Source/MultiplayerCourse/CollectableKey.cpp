@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MultiplayerCourseCharacter.h"
+#include "Components/AudioComponent.h"
 
 ACollectableKey::ACollectableKey()
 {
@@ -28,6 +29,11 @@ ACollectableKey::ACollectableKey()
 	Mesh->SetIsReplicated(true);
 	Mesh->SetCollisionProfileName(FName("OverlapAllDynamic"));
 
+	CollectAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("CollectAudio"));
+	CollectAudio->SetupAttachment(RootComp);
+	CollectAudio->SetAutoActivate(false);
+
+	RotationSpeed = 100.f;
 }
 
 void ACollectableKey::BeginPlay()
@@ -42,6 +48,9 @@ void ACollectableKey::Tick(float DeltaTime)
 
 	if (HasAuthority())
 	{
+		// Rotaciona a mesh
+		Mesh->AddRelativeRotation(FRotator(.0f, RotationSpeed * DeltaTime, .0f));
+
 		TArray<AActor*> OverlappingActors;
 		Capsule->GetOverlappingActors(OverlappingActors, AMultiplayerCourseCharacter::StaticClass());
 
@@ -58,6 +67,7 @@ void ACollectableKey::Tick(float DeltaTime)
 void ACollectableKey::OnRep_IsCollected()
 {
 	Mesh->SetVisibility(false);
+	CollectAudio->Play();
 }
 
 void ACollectableKey::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 

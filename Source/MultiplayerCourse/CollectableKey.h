@@ -7,6 +7,7 @@
 #include "CollectableKey.generated.h"
 
 class UCapsuleComponent;
+class UAudioComponent;
 
 UCLASS()
 class MULTIPLAYERCOURSE_API ACollectableKey : public AActor
@@ -37,6 +38,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	UPROPERTY(EditAnywhere)
+	float RotationSpeed;
+
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* CollectAudio;
+
 	UPROPERTY(ReplicatedUsing = OnRep_IsCollected, VisibleAnywhere)
 	bool IsCollected;
 
