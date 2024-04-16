@@ -11,7 +11,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "Engine/StaticMeshActor.h"
 #include "Particles/ParticleSystem.h"
-#include <Kismet/GameplayStatics.h>
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/DamageEvents.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMultiplayerCourseCharacter
@@ -51,7 +53,7 @@ AMultiplayerCourseCharacter::AMultiplayerCourseCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
-	
+
 	OriginalMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	MaxRunSpeed = 1500.f;
 }
@@ -93,6 +95,8 @@ void AMultiplayerCourseCharacter::SetupPlayerInputComponent(class UInputComponen
 		// Run
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &AMultiplayerCourseCharacter::Run);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Completed, this, &AMultiplayerCourseCharacter::Run);
+
+		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AMultiplayerCourseCharacter::Shoot);
 	}
 }
 
@@ -132,17 +136,89 @@ void AMultiplayerCourseCharacter::Look(const FInputActionValue &Value)
 	}
 }
 
-void AMultiplayerCourseCharacter::Run(const FInputActionValue &Value)
+void AMultiplayerCourseCharacter::ToggleRunSpeed(bool bRunning)
 {
-	bool bRunning = Value.Get<bool>();
 	if (bRunning)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;
 	}
-	else 
+	else
 	{
 		GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed;
 	}
+}
+
+void AMultiplayerCourseCharacter::Run(const FInputActionValue &Value)
+{
+	bool bRunning = Value.Get<bool>();
+	if (HasAuthority())
+	{
+		ToggleRunSpeed(bRunning);
+	}
+	else
+	{
+		ServerRPCRun(bRunning);
+	}
+}
+
+void AMultiplayerCourseCharacter::ServerRPCRun_Implementation(bool bRunning)
+{
+	ToggleRunSpeed(bRunning);
+}
+
+void AMultiplayerCourseCharacter::TryShoot()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		FVector ViewPointLocation;
+		FRotator ViewPointRotation;
+		PlayerController->GetPlayerViewPoint(ViewPointLocation, ViewPointRotation);
+
+		FHitResult Hit;
+		FVector Start = ViewPointLocation;
+		FVector End = ViewPointLocation + ViewPointRotation.Vector() * 1000.f;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		bool HasHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_GameTraceChannel1, Params);
+		if (HasHit)
+		{
+			float Damage = 50.f;
+			FPointDamageEvent DamageEvent(Damage, Hit, -ViewPointRotation.Vector(), nullptr);
+			AActor* HitActor = Hit.GetActor();
+			HitActor->TakeDamage(Damage, DamageEvent, GetController(), this);
+		}
+	}
+}
+
+void AMultiplayerCourseCharacter::Shoot()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White, FString::Printf(TEXT("Player %d shot"), GPlayInEditorID));
+	if (HasAuthority())
+	{
+		// Se sou servidor posso atirar
+		TryShoot();
+	} else
+	{
+		// Se não sou servidor, peço ao servidor para atirar
+		ServerRPCTryShoot();
+	}
+	
+}
+
+void AMultiplayerCourseCharacter::ServerRPCTryShoot_Implementation()
+{
+	TryShoot();
+}
+
+float AMultiplayerCourseCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
+{
+ 	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	DamageToApply = FMath::Min(DamageToApply, 100.f);
+
+	Destroy();
+
+	return DamageToApply;
 }
 
 // Esta função não é declarada no header

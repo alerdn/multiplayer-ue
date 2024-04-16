@@ -40,6 +40,9 @@ class AMultiplayerCourseCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* RunAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ShootAction;
+
 public:
 	AMultiplayerCourseCharacter();
 	
@@ -53,7 +56,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 	
 	void Run(const FInputActionValue& Value);
-			
+	void Shoot();			
 
 protected:
 	// APawn interface
@@ -63,11 +66,6 @@ protected:
 	virtual void BeginPlay();
 
 public:
-	UPROPERTY(EditAnywhere)
-	float MaxRunSpeed;
-
-	float OriginalMaxWalkSpeed;
-
 	UPROPERTY(EditAnywhere)
 	UStaticMesh* SphereMesh;
 
@@ -95,5 +93,23 @@ public:
 	// Usar replicated properties para replicar stateful events => pontos de vida
 	// Usar multicast/client rpc para replicar transient events ou cosmetic events => criar partícula, ativar tela de sangramento em um player
 	// Usar server rpc para se comunicar com o servidor e sempre validar dados => senão pode haver cheaters
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+private:
+	UPROPERTY(EditAnywhere)
+	float MaxRunSpeed;
+
+	float OriginalMaxWalkSpeed;
+
+	void ToggleRunSpeed(bool bRunning);
+
+	UFUNCTION(Server, Unreliable)
+	void ServerRPCRun(bool bRunning);
+
+	void TryShoot();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPCTryShoot();
 };
 
