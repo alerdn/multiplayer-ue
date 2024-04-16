@@ -34,7 +34,7 @@ AMultiplayerCourseCharacter::AMultiplayerCourseCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 800.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
@@ -51,6 +51,9 @@ AMultiplayerCourseCharacter::AMultiplayerCourseCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	
+	OriginalMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	MaxRunSpeed = 1500.f;
 }
 
 void AMultiplayerCourseCharacter::BeginPlay()
@@ -86,6 +89,10 @@ void AMultiplayerCourseCharacter::SetupPlayerInputComponent(class UInputComponen
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCourseCharacter::Look);
+
+		// Run
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &AMultiplayerCourseCharacter::Run);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Completed, this, &AMultiplayerCourseCharacter::Run);
 	}
 }
 
@@ -122,6 +129,19 @@ void AMultiplayerCourseCharacter::Look(const FInputActionValue &Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AMultiplayerCourseCharacter::Run(const FInputActionValue &Value)
+{
+	bool bRunning = Value.Get<bool>();
+	if (bRunning)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;
+	}
+	else 
+	{
+		GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeed;
 	}
 }
 

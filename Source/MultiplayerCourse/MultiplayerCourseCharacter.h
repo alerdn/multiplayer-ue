@@ -36,6 +36,9 @@ class AMultiplayerCourseCharacter : public ACharacter
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* RunAction;
 
 public:
 	AMultiplayerCourseCharacter();
@@ -48,6 +51,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	
+	void Run(const FInputActionValue& Value);
 			
 
 protected:
@@ -58,6 +63,11 @@ protected:
 	virtual void BeginPlay();
 
 public:
+	UPROPERTY(EditAnywhere)
+	float MaxRunSpeed;
+
+	float OriginalMaxWalkSpeed;
+
 	UPROPERTY(EditAnywhere)
 	UStaticMesh* SphereMesh;
 
